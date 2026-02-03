@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>For You</title>
+
+  <style>
+    :root{
+      --bg1:#0b1020;
+      --bg2:#2a0f1d;
+      --card: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --accent:#ff4d8d;
+      --accent2:#ff86b1;
+      --good:#3ee27a;
+      --shadow: 0 18px 50px rgba(0,0,0,.35);
+      --radius: 22px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background:
+        radial-gradient(1200px 600px at 15% 10%, rgba(255,77,141,.26), transparent 60%),
+        radial-gradient(900px 500px at 85% 25%, rgba(127,90,240,.20), transparent 60%),
+        radial-gradient(900px 700px at 40% 100%, rgba(255,134,177,.18), transparent 60%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+      overflow-x:hidden;
+    }
+
+    /* floating hearts background */
+    .hearts{
+      position:fixed; inset:0;
+      pointer-events:none;
+      z-index:0;
+      opacity:.35;
+      filter: blur(.2px);
+    }
+    .heart{
+      position:absolute;
+      font-size:18px;
+      color: rgba(255,134,177,.75);
+      animation: floatUp linear infinite;
+      transform: translateY(110vh);
+    }
+    @keyframes floatUp{
+      from{ transform: translateY(110vh) translateX(0); }
+      to{ transform: translateY(-20vh) translateX(var(--drift)); }
+    }
+
+    .wrap{
+      position:relative;
+      z-index:1;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 26px 18px 70px;
+    }
+
+    header{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 18px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      user-select:none;
+    }
+    .brand .logo{
+      width:44px; height:44px;
+      display:grid; place-items:center;
+      border-radius: 14px;
+      background: rgba(255,255,255,.10);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(255,255,255,.12);
+    }
+    .brand .logo span{ font-size:20px; color: var(--accent2); }
+    .brand .title{
+      line-height:1.05;
+    }
+    .brand .title b{ display:block; font-size:14px; letter-spacing:.08em; text-transform:uppercase; opacity:.9; }
+    .brand .title small{ color: var(--muted); font-size:12px; }
+
+    .musicBtn{
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 999px;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      box-shadow: var(--shadow);
+      transition: transform .15s ease, background .15s ease;
+    }
+    .musicBtn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.14); }
+    .musicDot{
+      width:10px; height:10px; border-radius:999px;
+      background: rgba(255,255,255,.35);
+      box-shadow: 0 0 0 0 rgba(255,77,141,.0);
+      transition: .2s ease;
+    }
+    .musicBtn.playing .musicDot{
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(255,77,141,.14);
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .page{
+      display:none;
+      padding: 22px;
+    }
+    .page.active{ display:block; }
+
+    .hero{
+      padding: 24px 22px;
+      background: linear-gradient(135deg, rgba(255,77,141,.22), rgba(127,90,240,.16));
+      border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .hero h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing:.08em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.85);
+    }
+    .hero h2{
+      margin: 12px 0 0;
+      font-size: 28px;
+      letter-spacing:.01em;
+    }
+
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      color: rgba(255,255,255,.84);
+      font-size: 13px;
+      margin-top: 14px;
+    }
+    .kicker .spark{
+      color: var(--accent2);
+      font-size: 16px;
+    }
+
+    .content{
+      padding: 22px;
+    }
+
+    .quote{
+      margin-top: 14px;
+      padding: 14px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      color: rgba(255,255,255,.82);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .divider{
+      height:1px;
+      background: rgba(255,255,255,.10);
+      margin: 18px 0;
+    }
+
+    .btnRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top: 18px;
+      align-items:center;
+    }
+    .btn{
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      padding: 12px 16px;
+      border-radius: 14px;
+      cursor:pointer;
+      box-shadow: var(--shadow);
+      font-weight: 600;
+      letter-spacing:.01em;
+      transition: transform .15s ease, background .15s ease;
+      user-select:none;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.14); }
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(255,77,141,.95), rgba(255,134,177,.85));
+      border-color: rgba(255,255,255,.22);
+    }
+    .btn.primary:hover{ background: linear-gradient(135deg, rgba(255,77,141,1), rgba(255,134,177,.95)); }
+    .btn.good{
+      background: linear-gradient(135deg, rgba(62,226,122,.95), rgba(140,255,196,.75));
+      border-color: rgba(255,255,255,.22);
+      color: rgba(10,18,28,.92);
+    }
+    .btn.ghost{
+      background: rgba(255,255,255,.07);
+    }
+    .btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+      transform:none !important;
+    }
+
+    /* Adventure cards */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap:14px;
+      margin-top: 14px;
+    }
+    .pick{
+      grid-column: span 12;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 18px;
+      padding: 16px;
+      cursor:pointer;
+      transition: transform .15s ease, background .15s ease, border-color .15s ease;
+      position:relative;
+      overflow:hidden;
+      user-select:none;
+    }
+    .pick:hover{ transform: translateY(-1px); background: rgba(255,255,255,.11); }
+    .pick.selected{
+      border-color: rgba(255,77,141,.75);
+      box-shadow: 0 18px 50px rgba(255,77,141,.14);
+      background: rgba(255,77,141,.10);
+    }
+    .pick .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .pick h5{
+      margin:0;
+      font-size: 18px;
+      letter-spacing:.01em;
+      color: rgba(255,255,255,.92);
+    }
+    .pick small{
+      display:block;
+      margin-top:4px;
+      color: rgba(255,255,255,.70);
+      font-size: 13px;
+    }
+    .badge{
+      border:1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: rgba(255,255,255,.85);
+      white-space:nowrap;
+    }
+
+    @media(min-width: 720px){
+      .pick{ grid-column: span 4; }
+      .hero h2{ font-size: 34px; }
+    }
+
+    /* Friendly question */
+    .questionWrap{
+      position:relative;
+      min-height: 220px;
+      margin-top: 10px;
+      border-radius: 18px;
+      border:1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      padding: 18px;
+      overflow:hidden;
+    }
+    .yesNoRow{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      margin-top: 14px;
+      flex-wrap:wrap;
+    }
+    .noBtn{
+      position:relative;
+    }
+    .noBtn.runaway{
+      position:absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+    }
+
+    /* Final page */
+    .finalBig{
+      font-size: 34px;
+      margin: 12px 0 0;
+    }
+    .footerNote{
+      margin-top: 14px;
+      color: rgba(255,255,255,.72);
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="hearts" aria-hidden="true" id="hearts"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo"><span>❤</span></div>
+        <div class="title">
+          <b>FOR YOU</b>
+          <small>A Special Surprise</small>
+        </div>
+      </div>
+
+      <button class="musicBtn" id="musicBtn" type="button">
+        <span class="musicDot" aria-hidden="true"></span>
+        <span id="musicLabel">Play Music</span>
+      </button>
+    </header>
+
+    <div class="card">
+
+      <!-- PAGE 1 -->
+      <section class="page active" id="page1">
+        <div class="hero">
+          <h1>TO MY DEAREST...</h1>
+          <h2>Why you mean so much...</h2>
+          <div class="kicker"><span class="spark">✦</span><span>A little journey, just for us</span></div>
+        </div>
+
+        <div class="content">
+          <div class="quote" id="quote1">
+            “A recent time brought a beautiful friend, who in such a short while became incredibly special to me — not for grand reasons,
+            but for your kindness, your thoughtfulness, and the calm you bring to those around you.”
+          </div>
+
+          <div class="divider"></div>
+
+          <p><b style="color:rgba(255,255,255,.86)">A journey of a thousand miles begins with a good heart</b></p>
+
+          <div class="btnRow">
+            <button class="btn primary" id="nextTo2" type="button">Next Page</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 2 -->
+      <section class="page" id="page2">
+        <div class="hero">
+          <h1>OUR NEXT ADVENTURE...</h1>
+          <h2>Pick the one you'd love to do first!</h2>
+          <div class="kicker"><span class="spark">☕</span><span>Choose one, then confirm</span></div>
+        </div>
+
+        <div class="content">
+          <div class="grid" id="adventureGrid">
+
+            <div class="pick" data-adventure="Long Drives">
+              <div class="top">
+                <div>
+                  <h5>Long Drives</h5>
+                  <small>Endless Roads & Quiet Music</small>
+                </div>
+                <span class="badge">🚗</span>
+              </div>
+            </div>
+
+            <div class="pick" data-adventure="Coffee & Tea">
+              <div class="top">
+                <div>
+                  <h5>Coffee & Tea</h5>
+                  <small>Warm Sips & Peaceful Talks</small>
+                </div>
+                <span class="badge">☕🍵</span>
+              </div>
+            </div>
+
+            <div class="pick" data-adventure="Mountain Escapes">
+              <div class="top">
+                <div>
+                  <h5>Mountain Escapes</h5>
+                  <small>Fresh Air & Calm Views</small>
+                </div>
+                <span class="badge">🏔️</span>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="btnRow">
+            <button class="btn ghost" id="backTo1" type="button">Back</button>
+            <button class="btn primary" id="confirmAdventure" type="button" disabled>Confirm Adventure</button>
+          </div>
+
+          <p class="footerNote" id="pickedNote"></p>
+        </div>
+      </section>
+
+      <!-- PAGE 3 -->
+      <section class="page" id="page3">
+        <div class="hero">
+          <h1>ONE MORE THING...</h1>
+          <h2>Would you like to do this sometime?</h2>
+          <div class="kicker"><span class="spark">✨</span><span>No pressure — just a simple thought</span></div>
+        </div>
+
+        <div class="content">
+          <p id="adventureSummary" style="margin-top:0;"></p>
+
+          <div class="questionWrap" id="questionWrap">
+            <div style="color:rgba(255,255,255,.86); font-weight:700; font-size:16px;">
+              Your choice matters 😊
+            </div>
+            <p id="noMessage" style="margin-top:10px; min-height:24px;"></p>
+
+            <div class="yesNoRow" id="yesNoRow">
+              <button class="btn good" id="yesBtn" type="button">YES</button>
+              <button class="btn" id="noBtn" type="button">No</button>
+            </div>
+          </div>
+
+          <div class="btnRow">
+            <button class="btn ghost" id="backTo2" type="button">Back</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PAGE 4 -->
+      <section class="page" id="page4">
+        <div class="hero">
+          <h1>A NEW CHAPTER BEGINS...</h1>
+          <h2 class="finalBig">Wishing you the very best ahead.</h2>
+          <div class="kicker"><span class="spark">✦</span><span id="finalAdventureKicker">Wishing you many meaningful moments</span></div>
+        </div>
+
+        <div class="content">
+          <div class="quote">
+            “Pack your heart… a new journey begins today. I wish you joy in every sunset, every road, and every place you explore.”
+          </div>
+
+          <div class="divider"></div>
+
+          <p id="finalLine"></p>
+
+          <div class="btnRow">
+            <button class="btn primary" id="restartBtn" type="button">Restart</button>
+          </div>
+
+          <p class="footerNote">Tip: you can edit the text anytime inside index.html and commit changes to update the site.</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- OPTIONAL MUSIC -->
+  <audio id="bgMusic" preload="auto" loop>
+    <source src="song.mp3" type="audio/mpeg" />
+  </audio>
+
+  <script>
+    // floating hearts
+    (function makeHearts(){
+      const hearts = document.getElementById("hearts");
+      const count = 22;
+      const symbols = ["❤","💗","💖","💕","💘"];
+      for(let i=0;i<count;i++){
+        const s = document.createElement("div");
+        s.className = "heart";
+        s.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+        const left = Math.random()*100;
+        const dur = 9 + Math.random()*10;
+        const delay = -Math.random()*dur;
+        const drift = (Math.random()*120 - 60).toFixed(0) + "px";
+        s.style.left = left + "vw";
+        s.style.animationDuration = dur + "s";
+        s.style.animationDelay = delay + "s";
+        s.style.setProperty("--drift", drift);
+        s.style.fontSize = (14 + Math.random()*20).toFixed(0) + "px";
+        hearts.appendChild(s);
+      }
+    })();
+
+    // router
+    const pages = ["page1","page2","page3","page4"].map(id => document.getElementById(id));
+    function showPage(id){
+      pages.forEach(p => p.classList.toggle("active", p.id === id));
+      window.scrollTo({top:0, behavior:"smooth"});
+    }
+
+    // music toggle
+    const bgMusic = document.getElementById("bgMusic");
+    const musicBtn = document.getElementById("musicBtn");
+    const musicLabel = document.getElementById("musicLabel");
+    let musicOn = false;
+
+    async function toggleMusic(){
+      try{
+        if(!musicOn){
+          await bgMusic.play();
+          musicOn = true;
+          musicBtn.classList.add("playing");
+          musicLabel.textContent = "Pause Music";
+        }else{
+          bgMusic.pause();
+          musicOn = false;
+          musicBtn.classList.remove("playing");
+          musicLabel.textContent = "Play Music";
+        }
+      }catch(e){
+        alert("Music couldn't play. If you're on mobile, try tapping again.\nAlso ensure song.mp3 exists in your repo.");
+      }
+    }
+    musicBtn.addEventListener("click", toggleMusic);
+
+    // page1 -> page2
+    document.getElementById("nextTo2").addEventListener("click", () => showPage("page2"));
+
+    // adventures select
+    const picks = Array.from(document.querySelectorAll(".pick"));
+    const pickedNote = document.getElementById("pickedNote");
+    const confirmAdventure = document.getElementById("confirmAdventure");
+    let selectedAdventure = "";
+
+    picks.forEach(card => {
+      card.addEventListener("click", () => {
+        picks.forEach(p => p.classList.remove("selected"));
+        card.classList.add("selected");
+        selectedAdventure = card.dataset.adventure;
+        confirmAdventure.disabled = false;
+        pickedNote.textContent = "Selected: " + selectedAdventure + " ✨";
+      });
+    });
+
+    document.getElementById("backTo1").addEventListener("click", () => showPage("page1"));
+
+    confirmAdventure.addEventListener("click", () => {
+      const adventureSummary = document.getElementById("adventureSummary");
+      adventureSummary.textContent = selectedAdventure
+        ? `Nice choice: ${selectedAdventure}. Just one small question 🙂`
+        : "Just one small question 🙂";
+      showPage("page3");
+    });
+
+    document.getElementById("backTo2").addEventListener("click", () => showPage("page2"));
+
+    // YES / NO playful behavior
+    const yesBtn = document.getElementById("yesBtn");
+    const noBtn = document.getElementById("noBtn");
+    const noMessage = document.getElementById("noMessage");
+    const questionWrap = document.getElementById("questionWrap");
+
+    const noLines = [
+      "Totally okay 😊",
+      "No worries at all ✨",
+      "Your comfort matters most 🌿",
+      "Maybe another time 🌸",
+      "I still wish you the best 🤍",
+      "All good — stay happy 🌷",
+      "No pressure, ever 🌙",
+      "Take care always 💫"
+    ];
+    let noCount = 0;
+
+    function moveNoButton(){
+      noBtn.classList.add("runaway");
+      questionWrap.style.position = "relative";
+
+      const pad = 18;
+      const wrapRect = questionWrap.getBoundingClientRect();
+      const bRect = noBtn.getBoundingClientRect();
+      const maxX = wrapRect.width - bRect.width - pad;
+      const maxY = wrapRect.height - bRect.height - pad;
+
+      const x = pad + Math.random() * Math.max(10, maxX - pad);
+      const y = 64 + Math.random() * Math.max(10, maxY - 64);
+
+      noBtn.style.left = x + "px";
+      noBtn.style.top = y + "px";
+    }
+
+    noBtn.addEventListener("mouseenter", () => {
+      if (window.innerWidth > 520) moveNoButton();
+    });
+
+    noBtn.addEventListener("click", () => {
+      const line = noLines[Math.min(noCount, noLines.length - 1)];
+      noMessage.textContent = line;
+
+      const scale = 1 + Math.min(0.7, noCount * 0.10);
+      yesBtn.style.transform = `scale(${scale})`;
+
+      moveNoButton();
+      noCount++;
+    });
+
+    yesBtn.addEventListener("click", () => {
+      // Final page: WELL-WISHER text (no "first stop / pick you up at 7")
+      const kicker = document.getElementById("finalAdventureKicker");
+      kicker.textContent = selectedAdventure
+        ? `Wishing you a beautiful journey ahead`
+        : "Wishing you many meaningful moments";
+
+      const finalLine = document.getElementById("finalLine");
+      finalLine.innerHTML = selectedAdventure
+        ? `Next up: <b style="color:rgba(255,255,255,.86)">${selectedAdventure}</b>. May it bring peace and joy.`
+        : `Wishing you happiness in every journey ahead.`;
+
+      // reset
+      noBtn.style.left = "";
+      noBtn.style.top = "";
+      noBtn.classList.remove("runaway");
+      yesBtn.style.transform = "scale(1)";
+      noMessage.textContent = "";
+      noCount = 0;
+
+      showPage("page4");
+    });
+
+    // restart
+    document.getElementById("restartBtn").addEventListener("click", () => {
+      selectedAdventure = "";
+      pickedNote.textContent = "";
+      confirmAdventure.disabled = true;
+      picks.forEach(p => p.classList.remove("selected"));
+      showPage("page1");
+    });
+  </script>
+</body>
+</html>
